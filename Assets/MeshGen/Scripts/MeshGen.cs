@@ -153,7 +153,7 @@ public class MeshGen : MonoBehaviour
 
     public void OuterLoop(Vector3 p, Vector3 d, float a, float r, int noSides, List<Vector3> points)
     {
-        Vector3 dp = Vector3.Cross(d, Vector3.one).normalized;
+        Vector3 dp = Vector3.Cross(d, Vector3.up).normalized;
 
         if (noSides > 4)
             points.Add(p);
@@ -166,7 +166,7 @@ public class MeshGen : MonoBehaviour
 
     public void InnerLoop(Vector3 p, Vector3 d, float a, float r, List<Vector3> points)
     {
-        Vector3 dp = Vector3.Cross(d, Vector3.one).normalized;
+        Vector3 dp = Vector3.Cross(d, Vector3.up).normalized;
 
         for (int i = 0; i < noSides; i++)
         {
@@ -246,11 +246,32 @@ public class MeshGen : MonoBehaviour
 
     private void OnDrawGizmos()
     {
-        Gizmos.DrawLine(transforms[0].position, transforms[1].position);
         Gizmos.color = Color.green;
         Gizmos.DrawWireSphere(transforms[0].position, 0.05f);
         Gizmos.color = Color.red;
         Gizmos.DrawWireSphere(transforms[1].position, 0.05f);
+
+        Gizmos.DrawLine(transforms[0].position, transforms[1].position);
+
+        Gizmos.color = Color.yellow;
+        Gizmos.DrawLine(
+            transforms[0].position,
+            transforms[0].position + 
+            Quaternion.AngleAxis(10, transforms[1].position - transforms[0].position) * 
+            (0.2f * Vector3.Cross(transforms[1].position - transforms[0].position, Vector3.up).normalized));
+
+        //Gizmos.DrawLine(
+        //   transforms[1].position,
+        //   transforms[1].position +
+        //   Quaternion.AngleAxis(10, transforms[0].position - transforms[1].position) *
+        //   (0.2f * Vector3.Cross(transforms[0].position - transforms[1].position, Vector3.up).normalized));
+
+        Gizmos.DrawLine(
+           transforms[0].position,
+           transforms[0].position +
+          
+           (Vector3.Cross(transforms[0].position - transforms[1].position, Vector3.up)));
+
     }
 
     [ContextMenu("VertColorsSetFor3SidesRGB")]

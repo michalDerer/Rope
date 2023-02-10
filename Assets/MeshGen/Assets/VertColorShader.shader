@@ -1,63 +1,59 @@
 Shader "Dede/VertColorShader"
 {
-    Properties
-    {
-        _MainTex ("Texture", 2D) = "white" {}
-    }
-    SubShader
-    {
-        Tags { "RenderType"="Opaque" }
-        LOD 100
+	Properties
+	{
+	}
 
-        Pass
-        {
-            CGPROGRAM
-            #pragma vertex vert
-            #pragma fragment frag
-            // make fog work
-            #pragma multi_compile_fog
+	SubShader
+	{
+		Tags { "RenderType" = "Opaque" }
 
-            #include "UnityCG.cginc"
+		Pass
+		{
+			Cull Off // turn off backface culling
 
-            struct appdata
-            {
-                float4 vertex : POSITION;
-                float4 color : COLOR;
-                float2 uv : TEXCOORD0;
-            };
+			CGPROGRAM
+			#pragma target 3.0
 
-            struct v2f
-            {
-                float2 uv : TEXCOORD0;
-                UNITY_FOG_COORDS(1)
-                float4 vertex : SV_POSITION;
-                float4 color : COLOR;
-            };
+			#pragma vertex vert
+			#pragma fragment frag
 
-            sampler2D _MainTex;
-            float4 _MainTex_ST;
+			struct appdata
+			{
+				float4 vertex : POSITION;
+				float4 color : COLOR;
+				float2 uv : TEXCOORD0;
+			};
 
-            v2f vert (appdata v)
-            {
-                v2f o;
-                o.vertex = UnityObjectToClipPos(v.vertex);
-                o.uv = TRANSFORM_TEX(v.uv, _MainTex);
-                UNITY_TRANSFER_FOG(o,o.vertex);
-                o.color = v.color;
-                return o;
-            }
+			struct v2f
+			{
+				float4 vertex : SV_POSITION;
+				float4 color : COLOR;
+				float2 uv : TEXCOORD0;
+			};
 
-            fixed4 frag(v2f i) : SV_Target
-            {
-                // sample the texture
-                //fixed4 col = tex2D(_MainTex, i.uv);
-                // apply fog
-                //UNITY_APPLY_FOG(i.fogCoord, col);
-                //return col;
+			v2f vert(appdata v)
+			{
+				v2f o;
 
-                return i.color;
-            }
-            ENDCG
-        }
-    }
+				o.vertex = UnityObjectToClipPos(v.vertex);
+				o.color = v.color;
+				o.uv = v.uv;
+
+				return o;
+			}
+
+			fixed4 frag(v2f i, fixed facing : VFACE) : SV_Target
+			{
+				//this feature only exists from shader model 3.0 onwards, 
+				//so the shader needs to have the #pragma target 3.0 compilation directive.
+
+				// VFACE input positive for frontbaces,
+				// negative for backfaces. Output one
+				// of the two colors depending on that.
+				return facing > 0 ? i.color : i.color * 0.1f;
+			}
+			ENDCG
+		}
+	}
 }
