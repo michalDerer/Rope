@@ -202,6 +202,7 @@ Transform:
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
   m_LocalPosition: {x: 0, y: 1, z: -10}
   m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 0}
   m_RootOrder: 0
@@ -241,7 +242,7 @@ MonoBehaviour:
   - {fileID: 1115749056}
   - {fileID: 1118378007}
   noSides: 3
-  noSegments: 0
+  noSegments: 2
   radius: 0.1
 --- !u!23 &1012561818
 MeshRenderer:
@@ -254,6 +255,7 @@ MeshRenderer:
   m_CastShadows: 1
   m_ReceiveShadows: 1
   m_DynamicOccludee: 1
+  m_StaticShadowCaster: 0
   m_MotionVectors: 1
   m_LightProbeUsage: 1
   m_ReflectionProbeUsage: 1
@@ -302,6 +304,7 @@ Transform:
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
   m_LocalPosition: {x: 0, y: 0, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 1115749056}
   m_RootOrder: 0
@@ -332,6 +335,7 @@ Transform:
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
   m_LocalPosition: {x: 0, y: 0, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
   m_Children:
   - {fileID: 1012561820}
   m_Father: {fileID: 0}
@@ -363,6 +367,7 @@ Transform:
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
   m_LocalPosition: {x: 0, y: 0, z: 1}
   m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 0}
   m_RootOrder: 3
@@ -456,6 +461,7 @@ Transform:
   m_LocalRotation: {x: 0.40821788, y: -0.23456968, z: 0.10938163, w: 0.8754261}
   m_LocalPosition: {x: 0, y: 3, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 0}
   m_RootOrder: 1
@@ -471,14 +477,14 @@ Mesh:
   m_SubMeshes:
   - serializedVersion: 2
     firstByte: 0
-    indexCount: 6
+    indexCount: 0
     topology: 0
     baseVertex: 0
     firstVertex: 0
-    vertexCount: 6
+    vertexCount: 0
     localAABB:
-      m_Center: {x: 0, y: 0, z: 0.5}
-      m_Extent: {x: 0.09659259, y: 0.09659259, z: 0.5}
+      m_Center: {x: 0, y: 0, z: 0}
+      m_Extent: {x: 0, y: 0, z: 0}
   m_Shapes:
     vertices: []
     shapes: []
@@ -495,10 +501,10 @@ Mesh:
   m_KeepVertices: 1
   m_KeepIndices: 1
   m_IndexFormat: 0
-  m_IndexBuffer: 000002000100030005000400
+  m_IndexBuffer: 
   m_VertexData:
     serializedVersion: 3
-    m_VertexCount: 6
+    m_VertexCount: 3
     m_Channels:
     - stream: 0
       offset: 0
@@ -556,8 +562,8 @@ Mesh:
       offset: 0
       format: 0
       dimension: 0
-    m_DataSize: 240
-    _typelessdata: c3d090bdc3d0903d000000000000000000000000000080bf0000803f00000000000000000000803f4506d4bc56d2c5bd000000000000000000000000000080bf000000000000803f000000000000803f56d2c53d4d06d43c000000000000000000000000000080bf00000000000000000000803f0000803fc3d0903dc3d090bd0000803f00000000000000000000803f0000803f00000000000000000000803f56d2c5bd4506d4bc0000803f00000000000000000000803f000000000000803f000000000000803f4d06d43c56d2c53d0000803f00000000000000000000803f00000000000000000000803f0000803f
+    m_DataSize: 120
+    _typelessdata: cdccccbd000000000000000000000000000000000000000018000000cdcdcdcd0040000000000000d0cc4c3dac5cb1bd0000000000000000000000000000000000400000000000000100000001000000cdcc4c3dae5cb13d000000000000000000000000000000000000000000000000cdcdcdcd00000000
   m_CompressedMesh:
     m_Vertices:
       m_NumItems: 0
@@ -611,8 +617,8 @@ Mesh:
       m_BitSize: 0
     m_UVInfo: 0
   m_LocalAABB:
-    m_Center: {x: 0, y: 0, z: 0.5}
-    m_Extent: {x: 0.09659259, y: 0.09659259, z: 0.5}
+    m_Center: {x: -0.024999995, y: 0.000000007450581, z: 0}
+    m_Extent: {x: 0.075, y: 0.086602546, z: 0}
   m_MeshUsageFlags: 0
   m_BakedConvexCollisionMesh: 
   m_BakedTriangleCollisionMesh: 
