@@ -10,7 +10,7 @@ Shader "Dede/VertColorShader"
 
 		Pass
 		{
-			Cull Off // turn off backface culling
+			//Cull Off // turn off backface culling
 
 			CGPROGRAM
 			#pragma target 3.0

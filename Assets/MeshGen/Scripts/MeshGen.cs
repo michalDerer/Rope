@@ -120,12 +120,12 @@ public class MeshGen : MonoBehaviour
             noSides,
             points);
 
-        Debug.Log(points.Count);
+
         InnerLoopTriangles(points.Count - noSides, noSides, triangles);
 
-        for (int i = 1; i < noSegments; i++)
+        for (float i = 1; i < noSegments; i++)
         {
-            float t = i / noSegments;
+            float t =  i / noSegments;
             Vector3 p = Vector3.Lerp(transforms[0].position, transforms[1].position, t);
             InnerLoop(
                 p - transforms[0].position,
@@ -135,18 +135,19 @@ public class MeshGen : MonoBehaviour
                 points);
         }
 
-        //OuterLoopTrianglesAClc(
-        //    points.Count,
-        //    noSides,
-        //    triangles);
 
-        //OuterLoop(
-        //   transforms[1].position - transforms[0].position,
-        //   transforms[0].position - transforms[1].position,
-        //   360f / noSides,
-        //   radius,
-        //   noSides,
-        //   points);
+        OuterLoopTrianglesAClc(
+            points.Count,
+            noSides,
+            triangles);
+
+        OuterLoop(
+           transforms[1].position - transforms[0].position,
+           transforms[1].position - transforms[0].position,
+           360f / noSides,
+           radius,
+           noSides,
+           points);
 
 
         var meshFilter = GetComponent<MeshFilter>();
@@ -195,29 +196,23 @@ public class MeshGen : MonoBehaviour
         for (int i = 0; i < noSides - 1; i++)
         {
             triangles.Add(startIdx + i);
-            triangles.Add(startIdx + i + noSides);
             triangles.Add(startIdx + i + noSides + 1);
+            triangles.Add(startIdx + i + noSides);
 
             triangles.Add(startIdx + i);
-            triangles.Add(startIdx + i + noSides + 1);
             triangles.Add(startIdx + i + 1);
+            triangles.Add(startIdx + i + noSides + 1);
         }
 
         int hlpr = startIdx + noSides - 1;
 
         triangles.Add(hlpr);
-        triangles.Add(hlpr + noSides);
         triangles.Add(startIdx + noSides);
+        triangles.Add(hlpr + noSides);
 
         triangles.Add(hlpr);
-        triangles.Add(startIdx + noSides);
         triangles.Add(startIdx);
-
-
-        for (int i = startIdx; i < triangles.Count; i++)
-        {
-            Debug.Log(triangles[i]);
-        }
+        triangles.Add(startIdx + noSides);
     }
 
     public void OuterLoopTrianglesClc(int startIdx, int noSides, List<int> triangles)
@@ -320,23 +315,40 @@ public class MeshGen : MonoBehaviour
 
     }
 
-    [ContextMenu("VertColorsSetFor3SidesRGB")]
+    [ContextMenu("VertColorsSetRGBRepeat")]
     public void VertColorsSetFor3SidesRGB()
     {
-        if (noSides == 3)
+        MeshFilter mf = GetComponent<MeshFilter>(); ;
+        Color[] colors = new Color[mf.sharedMesh.vertexCount];
+
+        int i = 0;
+        int j = 0;
+
+        Color[] pallete = new Color[] { Color.red, Color.green, Color.blue };
+
+        if (noSides > 4)
         {
-            Color[] colors = new Color[6];
+            colors[i] = Color.red;
+            i++;
 
-            colors[0] = UnityEngine.Color.red;
-            colors[1] = UnityEngine.Color.green;
-            colors[2] = UnityEngine.Color.blue;
+            while(i + 1 < colors.Length)
+            {
+                colors[i] = pallete[j];
+                i++;
+                j++;
 
-            colors[3] = UnityEngine.Color.red;
-            colors[4] = UnityEngine.Color.green;
-            colors[5] = UnityEngine.Color.blue;
+                if (j == pallete.Length)
+                {
+                    j = 0;
+                }
+            }
 
-            GetComponent<MeshFilter>().sharedMesh.colors = colors;
+          
+            colors[i] = Color.red;
         }
+
+
+        mf.sharedMesh.colors = colors;
     }
 
     [ContextMenu("VertColorsFlushToGray")]
