@@ -97,6 +97,9 @@ public class MeshGen : MonoBehaviour
         mesh.SetVertices(points);
         mesh.triangles = triangles.ToArray();
         mesh.RecalculateNormals();
+
+        mesh.uv = CalculateUVs(noSides, points.Count);
+
     }
 
     public void InnerLoopVertices(Vector3 p, Vector3 d, float a, float r, List<Vector3> points)
@@ -226,6 +229,24 @@ public class MeshGen : MonoBehaviour
 
             return;
         }
+    }
+
+    public Vector2[] CalculateUVs(int noSides, int vertexCount)
+    {
+        Vector2[] uvs = new Vector2[vertexCount];
+
+        int i = noSides < 5 ? noSides : noSides + 1;
+        int iEnd = noSides < 5 ? vertexCount - noSides : vertexCount - noSides - 1;
+
+        for (; i < iEnd; i++)
+        {
+            //uvs[i].x = i / noSides;
+            uvs[i].x = 1;
+            uvs[i].y = (float) (i % noSides + 1) / (noSides + 0);
+            Debug.Log(uvs[i].y);
+        }
+
+        return uvs;
     }
 
     private void OnDrawGizmos()
