@@ -18,84 +18,6 @@ public class MeshGen : MonoBehaviour
     public void Generate1()
     {
 
-        //float a = 2 * Mathf.PI / noSides;
-        float a = 360f / noSides;
-
-        Vector3 pv = transforms[0].position;
-        Vector3 p = transforms[0].position;
-        Vector3 d = transforms[1].position - transforms[0].position;
-        Vector3 d_perpendicular = Vector3.Cross(d, Vector3.one).normalized;
-
-
-        var meshFilter = GetComponent<MeshFilter>();
-        Mesh mesh;
-        if (meshFilter.sharedMesh == null)
-        {
-            mesh = new Mesh();
-            meshFilter.sharedMesh = mesh;
-        }
-        else
-        {
-            mesh = meshFilter.sharedMesh;
-            mesh.Clear();
-        }
-
-
-        List<Vector3> pointss = new List<Vector3>();
-
-        Vector3 pl = p - pv;
-        if (noSides > 4)
-            pointss.Add(pl);
-
-        for (int i = 0; i < noSides; i++)
-        {
-            Vector3 pp = pl + (Quaternion.AngleAxis(i * a, d) * d_perpendicular) * radius;
-            pointss.Add(pp);
-        }
-
-
-        int[] tria = null;
-
-        if (noSides == 3)
-        {
-            tria = new int[3];
-
-            tria[0] = 2;
-            tria[1] = 1;
-            tria[2] = 0;
-        }
-
-        if (noSides == 4)
-        {
-            tria = new int[6];
-
-            tria[0] = 2;
-            tria[1] = 1;
-            tria[2] = 0;
-
-            tria[3] = 3;
-            tria[4] = 2;
-            tria[5] = 0;
-        }
-
-        if (noSides > 4)
-        {
-            tria = new int[noSides * 3];
-
-            for (int i = 0; i < noSides - 1; i++)
-            {
-                tria[i * 3] = 0;
-                tria[i * 3 + 1] = i + 2;
-                tria[i * 3 + 2] = i + 1;
-            }
-            tria[(noSides - 1) * 3] = 0;
-            tria[(noSides - 1) * 3 + 1] = 1;
-            tria[(noSides - 1) * 3 + 2] = (noSides - 1) + 1;
-        }
-
-        mesh.SetVertices(pointss);
-        mesh.triangles = tria;
-        mesh.RecalculateNormals();
     }
 
     [ContextMenu("Generate2")]
@@ -112,7 +34,7 @@ public class MeshGen : MonoBehaviour
             noSides,
             triangles);
 
-        OuterLoop(
+        OuterLoopVertices(
             transforms[0].position - transforms[0].position,
             transforms[1].position - transforms[0].position,
             angle,
@@ -121,30 +43,39 @@ public class MeshGen : MonoBehaviour
             points);
 
 
-        InnerLoopTriangles(points.Count - noSides, noSides, triangles);
-
-        for (float i = 1; i < noSegments; i++)
+        if (noSegments == 1)
         {
-            float t =  i / noSegments;
-            Vector3 p = Vector3.Lerp(transforms[0].position, transforms[1].position, t);
-            InnerLoop(
-                p - transforms[0].position,
-                transforms[1].position - p,
-                angle,
-                radius,
-                points);
+            InnerLoopTriangles(noSides < 5 ? points.Count - noSides : points.Count - noSides - 1, noSides, triangles);
+        }
+        else
+        {
+            for (float i = 1; i < noSegments; i++)
+            {
+                InnerLoopTriangles(points.Count - noSides, noSides, triangles);
+
+                float t =  i / noSegments;
+                Vector3 p = Vector3.Lerp(transforms[0].position, transforms[1].position, t);
+                InnerLoopVertices(
+                    p - transforms[0].position,
+                    transforms[1].position - p,
+                    angle,
+                    radius,
+                    points);
+            }
+
+            InnerLoopTriangles(noSides < 5 ? points.Count - noSides : points.Count - noSides - 1, noSides, triangles);
         }
 
 
-        OuterLoopTrianglesAClc(
+        OuterLoopTrianglesClc(
             points.Count,
             noSides,
             triangles);
 
-        OuterLoop(
+        OuterLoopVertices(
            transforms[1].position - transforms[0].position,
            transforms[1].position - transforms[0].position,
-           360f / noSides,
+           angle,
            radius,
            noSides,
            points);
@@ -168,12 +99,9 @@ public class MeshGen : MonoBehaviour
         mesh.RecalculateNormals();
     }
 
-    public void OuterLoop(Vector3 p, Vector3 d, float a, float r, int noSides, List<Vector3> points)
+    public void InnerLoopVertices(Vector3 p, Vector3 d, float a, float r, List<Vector3> points)
     {
-        Vector3 dp = Vector3.Cross(d, Vector3.up);
-
-        if (noSides > 4)
-            points.Add(p);
+        Vector3 dp = Vector3.Cross(d, Vector3.up).normalized;
 
         for (int i = 0; i < noSides; i++)
         {
@@ -181,13 +109,16 @@ public class MeshGen : MonoBehaviour
         }
     }
 
-    public void InnerLoop(Vector3 p, Vector3 d, float a, float r, List<Vector3> points)
+    public void OuterLoopVertices(Vector3 p, Vector3 d, float a, float r, int noSides, List<Vector3> points)
     {
         Vector3 dp = Vector3.Cross(d, Vector3.up).normalized;
 
+        if (noSides > 4)
+            points.Add(p);
+
         for (int i = 0; i < noSides; i++)
         {
-            points.Add(p + (Quaternion.AngleAxis(i * a, d) * dp) * radius);
+            points.Add(p + (Quaternion.AngleAxis(i * a, d) * dp) * r);
         }
     }
 
@@ -222,6 +153,8 @@ public class MeshGen : MonoBehaviour
             triangles.Add(startIdx);
             triangles.Add(startIdx + 1);
             triangles.Add(startIdx + 2);
+
+            return;
         }
 
         if (noSides == 4)
@@ -233,6 +166,8 @@ public class MeshGen : MonoBehaviour
             triangles.Add(startIdx);
             triangles.Add(startIdx + 2);
             triangles.Add(startIdx + 3);
+
+            return;
         }
 
         if (noSides > 4)
@@ -247,6 +182,8 @@ public class MeshGen : MonoBehaviour
             triangles.Add(startIdx);
             triangles.Add(startIdx + noSides);
             triangles.Add(startIdx + 1);
+
+            return;
         }
     }
 
@@ -257,6 +194,8 @@ public class MeshGen : MonoBehaviour
             triangles.Add(startIdx);
             triangles.Add(startIdx + 2);
             triangles.Add(startIdx + 1);
+
+            return;
         }
 
         if (noSides == 4)
@@ -268,6 +207,8 @@ public class MeshGen : MonoBehaviour
             triangles.Add(startIdx);
             triangles.Add(startIdx + 3);
             triangles.Add(startIdx + 2);
+
+            return;
         }
 
         if (noSides > 4)
@@ -282,6 +223,8 @@ public class MeshGen : MonoBehaviour
             triangles.Add(startIdx);
             triangles.Add(startIdx + 1);
             triangles.Add(startIdx + noSides);
+
+            return;
         }
     }
 
@@ -318,19 +261,33 @@ public class MeshGen : MonoBehaviour
     [ContextMenu("VertColorsSetRGBRepeat")]
     public void VertColorsSetFor3SidesRGB()
     {
-        MeshFilter mf = GetComponent<MeshFilter>(); ;
-        Color[] colors = new Color[mf.sharedMesh.vertexCount];
+        var mesh = GetComponent<MeshFilter>().sharedMesh;
+        Color[] colors = new Color[mesh.vertexCount];
 
         int i = 0;
         int j = 0;
 
         Color[] pallete = new Color[] { Color.red, Color.green, Color.blue };
 
-        if (noSides > 4)
+        if (noSides < 5)
+        {
+            while (i < colors.Length)
+            {
+                colors[i] = pallete[j];
+                i++;
+                j++;
+
+                if (j == pallete.Length)
+                {
+                    j = 0;
+                }
+            }
+        }
+        else
         {
             colors[i] = Color.red;
             i++;
-
+            
             while(i + 1 < colors.Length)
             {
                 colors[i] = pallete[j];
@@ -343,12 +300,11 @@ public class MeshGen : MonoBehaviour
                 }
             }
 
-          
             colors[i] = Color.red;
         }
 
 
-        mf.sharedMesh.colors = colors;
+        mesh.colors = colors;
     }
 
     [ContextMenu("VertColorsFlushToGray")]
