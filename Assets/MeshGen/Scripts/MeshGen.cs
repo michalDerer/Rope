@@ -53,7 +53,7 @@ public class MeshGen : MonoBehaviour
             {
                 InnerLoopTriangles(points.Count - noSides, noSides, triangles);
 
-                float t =  i / noSegments;
+                float t = i / noSegments;
                 Vector3 p = Vector3.Lerp(transforms[0].position, transforms[1].position, t);
                 InnerLoopVertices(
                     p - transforms[0].position,
@@ -99,7 +99,6 @@ public class MeshGen : MonoBehaviour
         mesh.RecalculateNormals();
 
         mesh.uv = CalculateUVs(noSides, points.Count);
-
     }
 
     public void InnerLoopVertices(Vector3 p, Vector3 d, float a, float r, List<Vector3> points)
@@ -242,8 +241,105 @@ public class MeshGen : MonoBehaviour
         {
             //uvs[i].x = i / noSides;
             uvs[i].x = 1;
-            uvs[i].y = (float) (i % noSides + 1) / (noSides + 0);
+            uvs[i].y = (float)(i % noSides + 1) / (noSides + 0);
             Debug.Log(uvs[i].y);
+        }
+
+        return uvs;
+    }
+
+    [ContextMenu("Generate3")]
+    public void Generate3()
+    {
+        List<Vector3> points = new List<Vector3>();
+        List<int> triangles = new List<int>();
+
+        float angle = 360f / noSides;
+
+
+        CreateSegmentVertices(
+            transforms[0].position - transforms[0].position,
+            transforms[1].position - transforms[0].position,
+            angle,
+            radius,
+            noSides,
+            points);
+
+        for (float i = 1; i <= noSegments; i++)
+        {
+            CreateSegmentTriangles(points.Count - noSides - 1, noSides, triangles);
+
+            Vector3 p = Vector3.Lerp(transforms[0].position, transforms[1].position, i / noSegments);
+
+            CreateSegmentVertices(
+                p - transforms[0].position,
+                //transforms[1].position - p, //sposobi zaspicatenie
+                Vector3.forward, //takto funguje spravne
+                angle,
+                radius,
+                noSides,
+                points);
+        }
+
+
+        var meshFilter = GetComponent<MeshFilter>();
+        Mesh mesh;
+        if (meshFilter.sharedMesh == null)
+        {
+            mesh = new Mesh();
+            meshFilter.sharedMesh = mesh;
+        }
+        else
+        {
+            mesh = meshFilter.sharedMesh;
+            mesh.Clear();
+        }
+
+        mesh.SetVertices(points);
+        mesh.triangles = triangles.ToArray();
+        mesh.RecalculateNormals();
+    }
+
+    public void CreateSegmentVertices(Vector3 p, Vector3 d, float a, float r, int sides, List<Vector3> points)
+    {
+        int startIdx = points.Count;
+
+        Vector3 dp = Vector3.Cross(d, Vector3.up).normalized;
+
+        for (int i = 0; i < sides; i++)
+        {
+            points.Add(p + (Quaternion.AngleAxis(i * a, d) * dp) * r);
+        }
+
+        points.Add(points[startIdx]);
+    }
+
+    public void CreateSegmentTriangles(int startIdx, int sides, List<int> triangles)
+    {
+        for (int i = 0; i < sides; i++)
+        {
+            triangles.Add(startIdx + i);
+            triangles.Add(startIdx + i + sides + 1 + 1);
+            triangles.Add(startIdx + i + sides + 1);
+
+            triangles.Add(startIdx + i);
+            triangles.Add(startIdx + i + 1);
+            triangles.Add(startIdx + i + sides + 1 + 1);
+        }
+    }
+
+    public Vector2[] CreateUVs(int sides, int vertexCount)
+    {
+        Vector2[] uvs = new Vector2[vertexCount];
+
+        int x = 0;
+        int xx = sides + 1;
+        
+
+        for (int i = 0; i < vertexCount; i++)
+        {
+            uvs[i].x = i / noSides;
+            uvs[i].y = (float) i % (sides + 1) / (sides + 0);
         }
 
         return uvs;
@@ -261,8 +357,8 @@ public class MeshGen : MonoBehaviour
         Gizmos.color = Color.yellow;
         Gizmos.DrawLine(
             transforms[0].position,
-            transforms[0].position + 
-            Quaternion.AngleAxis(10, transforms[1].position - transforms[0].position) * 
+            transforms[0].position +
+            Quaternion.AngleAxis(10, transforms[1].position - transforms[0].position) *
             (0.2f * Vector3.Cross(transforms[1].position - transforms[0].position, Vector3.up).normalized));
 
         //Gizmos.DrawLine(
@@ -274,7 +370,7 @@ public class MeshGen : MonoBehaviour
         Gizmos.DrawLine(
            transforms[0].position,
            transforms[0].position +
-          
+
            (Vector3.Cross(transforms[0].position - transforms[1].position, Vector3.up)));
 
     }
@@ -308,8 +404,8 @@ public class MeshGen : MonoBehaviour
         {
             colors[i] = Color.red;
             i++;
-            
-            while(i + 1 < colors.Length)
+
+            while (i + 1 < colors.Length)
             {
                 colors[i] = pallete[j];
                 i++;
@@ -335,7 +431,7 @@ public class MeshGen : MonoBehaviour
 
         Color[] colors = new Color[mesh.vertexCount];
 
-        for(int i = 0; i < colors.Length; i++)
+        for (int i = 0; i < colors.Length; i++)
         {
             colors[i] = Color.gray;
         }
