@@ -298,6 +298,8 @@ public class MeshGen : MonoBehaviour
         mesh.SetVertices(points);
         mesh.triangles = triangles.ToArray();
         mesh.RecalculateNormals();
+
+        mesh.uv = CreateUVs(noSides, noSegments, points.Count);
     }
 
     public void CreateSegmentVertices(Vector3 p, Vector3 d, float a, float r, int sides, List<Vector3> points)
@@ -328,18 +330,30 @@ public class MeshGen : MonoBehaviour
         }
     }
 
-    public Vector2[] CreateUVs(int sides, int vertexCount)
+    public Vector2[] CreateUVs(int sides, int segments, int vertexCount)
     {
         Vector2[] uvs = new Vector2[vertexCount];
 
-        int x = 0;
-        int xx = sides + 1;
-        
-
-        for (int i = 0; i < vertexCount; i++)
+        //trochu optimalizace s tvoriaci garbage
+        float[] uvYs = new float[sides + 1];
+        for (int i = 0; i <= sides; i++)
         {
-            uvs[i].x = i / noSides;
-            uvs[i].y = (float) i % (sides + 1) / (sides + 0);
+            uvYs[i] = (float)i / sides;
+        }
+
+        for (int edge = 0; edge <= segments; edge++)
+        {
+            int edgeVertRoot = edge * (sides + 1);
+            float uvX = (float)edge / segments;
+
+            for (int edgeVert = 0; edgeVert <= sides; edgeVert++)
+            {
+                uvs[edgeVertRoot + edgeVert].x = uvX;
+
+                //uvs[edgeVertRoot + edgeVert].y = (float)edgeVert / sides;
+                //trochu optimalizace s tvoriaci garbage
+                uvs[edgeVertRoot + edgeVert].y = uvYs[edgeVert];
+            }
         }
 
         return uvs;
