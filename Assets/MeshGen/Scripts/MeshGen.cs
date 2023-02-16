@@ -1,5 +1,6 @@
 using System.Collections;
 using System.Collections.Generic;
+using System.IO;
 using UnityEngine;
 
 public class MeshGen : MonoBehaviour
@@ -257,7 +258,7 @@ public class MeshGen : MonoBehaviour
         float angle = 360f / noSides;
 
 
-        CreateSegmentVertices(
+        CreateInnerLoopVertices(
             transforms[0].position - transforms[0].position,
             transforms[1].position - transforms[0].position,
             angle,
@@ -271,15 +272,32 @@ public class MeshGen : MonoBehaviour
 
             Vector3 p = Vector3.Lerp(transforms[0].position, transforms[1].position, i / noSegments);
 
-            CreateSegmentVertices(
+            CreateInnerLoopVertices(
                 p - transforms[0].position,
-                //transforms[1].position - p, //sposobi zaspicatenie
-                Vector3.forward, //takto funguje spravne
+                transforms[1].position - p,
                 angle,
                 radius,
                 noSides,
                 points);
         }
+
+        CreateEndsTriangles(points.Count, noSides, triangles);
+        CreateOuterLoopVertices(
+                transforms[0].position - transforms[0].position,
+                transforms[1].position - transforms[0].position,
+                angle,
+                radius,
+                noSides,
+                points);
+
+        CreateEndsTriangles(points.Count, noSides, triangles);
+        CreateOuterLoopVertices(
+                transforms[1].position - transforms[0].position,
+                -(transforms[1].position - transforms[0].position),
+                angle,
+                radius,
+                noSides,
+                points);
 
 
         var meshFilter = GetComponent<MeshFilter>();
@@ -302,7 +320,7 @@ public class MeshGen : MonoBehaviour
         mesh.uv = CreateUVs(noSides, noSegments, points.Count);
     }
 
-    public void CreateSegmentVertices(Vector3 p, Vector3 d, float a, float r, int sides, List<Vector3> points)
+    public void CreateInnerLoopVertices(Vector3 p, Vector3 d, float a, float r, int sides, List<Vector3> points)
     {
         int startIdx = points.Count;
 
@@ -314,6 +332,21 @@ public class MeshGen : MonoBehaviour
         }
 
         points.Add(points[startIdx]);
+    }
+
+    public void CreateOuterLoopVertices(Vector3 p, Vector3 d, float a, float r, int sides, List<Vector3> points)
+    {
+        Vector3 dp = Vector3.Cross(d, Vector3.up).normalized;
+
+        if (sides > 4)
+        {
+            points.Add(p);
+        }
+
+        for (int i = 0; i < sides; i++)
+        {
+            points.Add(p + (Quaternion.AngleAxis(i * a, d) * dp) * r);
+        }
     }
 
     public void CreateSegmentTriangles(int startIdx, int sides, List<int> triangles)
@@ -338,7 +371,7 @@ public class MeshGen : MonoBehaviour
         float[] uvYs = new float[sides + 1];
         for (int i = 0; i <= sides; i++)
         {
-            uvYs[i] = (float)i / sides;
+            uvYs[i] = (float)i / (sides + 1);
         }
 
         for (int edge = 0; edge <= segments; edge++)
@@ -359,6 +392,47 @@ public class MeshGen : MonoBehaviour
         return uvs;
     }
 
+    public void CreateEndsTriangles(int startIdx, int noSides, List<int> triangles)
+    {
+        if (noSides == 3)
+        {
+            triangles.Add(startIdx);
+            triangles.Add(startIdx + 2);
+            triangles.Add(startIdx + 1);
+
+            return;
+        }
+
+        if (noSides == 4)
+        {
+            triangles.Add(startIdx);
+            triangles.Add(startIdx + 2);
+            triangles.Add(startIdx + 1);
+
+            triangles.Add(startIdx);
+            triangles.Add(startIdx + 3);
+            triangles.Add(startIdx + 2);
+
+            return;
+        }
+
+        if (noSides > 4)
+        {
+            for (int i = 0; i < noSides - 1; i++)
+            {
+                triangles.Add(startIdx);
+                triangles.Add(startIdx + i + 2);
+                triangles.Add(startIdx + i + 1);
+            }
+
+            //triangles.Add(startIdx);
+            //triangles.Add(startIdx + 1);
+            //triangles.Add(startIdx + noSides);
+
+            return;
+        }
+    }
+
     private void OnDrawGizmos()
     {
         Gizmos.color = Color.green;
@@ -369,11 +443,11 @@ public class MeshGen : MonoBehaviour
         Gizmos.DrawLine(transforms[0].position, transforms[1].position);
 
         Gizmos.color = Color.yellow;
-        Gizmos.DrawLine(
-            transforms[0].position,
-            transforms[0].position +
-            Quaternion.AngleAxis(10, transforms[1].position - transforms[0].position) *
-            (0.2f * Vector3.Cross(transforms[1].position - transforms[0].position, Vector3.up).normalized));
+        //Gizmos.DrawLine(
+        //    transforms[0].position,
+        //    transforms[0].position +
+        //    Quaternion.AngleAxis(10, transforms[1].position - transforms[0].position) *
+        //    (0.2f * Vector3.Cross(transforms[1].position - transforms[0].position, Vector3.up).normalized));
 
         //Gizmos.DrawLine(
         //   transforms[1].position,
@@ -381,11 +455,9 @@ public class MeshGen : MonoBehaviour
         //   Quaternion.AngleAxis(10, transforms[0].position - transforms[1].position) *
         //   (0.2f * Vector3.Cross(transforms[0].position - transforms[1].position, Vector3.up).normalized));
 
-        Gizmos.DrawLine(
-           transforms[0].position,
-           transforms[0].position +
-
-           (Vector3.Cross(transforms[0].position - transforms[1].position, Vector3.up)));
+        //Gizmos.DrawLine(
+        //   transforms[0].position,
+        //   transforms[0].position + (Vector3.Cross(transforms[0].position - transforms[1].position, Vector3.up)));
 
     }
 
@@ -451,5 +523,54 @@ public class MeshGen : MonoBehaviour
         }
 
         mesh.colors = colors;
+    }
+
+    [ContextMenu("GenerateTexture")]
+    public void GenerateTexture()
+    {
+        Mesh mesh = GetComponent<MeshFilter>().sharedMesh;
+
+        //int width = 512;
+        //int height = 512;
+        //Texture2D texture = new Texture2D(width, height, TextureFormat.RGBA32, false);
+
+        //Generovanie lajn
+        /*
+        Color[] colors = new Color[] { Color.red, Color.green, Color.blue, Color.cyan };
+        float[] borders = new float[] { 0.25f, 0.5f, 0.75f, 1.0f };
+
+        for (int y = 0; y < height; y++)
+        {
+            float value = (float)y / height;
+            int color = -1;
+
+            for (int i = 3; i >= 0; i--)
+            {
+                color = value < borders[i] ? i : color;
+            }
+
+            for (int x = 0; x < width; x++)
+            {
+                texture.SetPixel(x, y, colors[color]);
+            }
+        }
+        */
+
+        //projekcia trojuholnikov
+
+        Vector3[] projection = new Vector3[] {
+            Vector3.ProjectOnPlane(mesh.vertices[mesh.vertexCount - 3], -(transforms[1].position - transforms[0].position)),
+            Vector3.ProjectOnPlane(mesh.vertices[mesh.vertexCount - 2], -(transforms[1].position - transforms[0].position)),
+            Vector3.ProjectOnPlane(mesh.vertices[mesh.vertexCount - 1], -(transforms[1].position - transforms[0].position))};
+
+        Debug.Log(mesh.vertices[mesh.vertexCount - 3] + " " + projection[0]);
+        Debug.Log(mesh.vertices[mesh.vertexCount - 2] + " " + projection[1]);
+        Debug.Log(mesh.vertices[mesh.vertexCount - 1] + " " + projection[2]);
+
+        //texture.Apply();
+
+        //File.WriteAllBytes(Path.Combine(Application.dataPath, "generatedImg.png"), texture.EncodeToPNG());
+        //UnityEditor.AssetDatabase.Refresh();
+
     }
 }
